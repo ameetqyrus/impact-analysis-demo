@@ -1,0 +1,29 @@
+name: UI Test Impact Analysis
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Get changed files
+      id: changed-files
+      uses: jitterbit/get-changed-files@v1
+
+    - name: Determine impacted tests
+      id: impacted-tests
+      run: |
+        echo "::set-output name=tests::$(node .github/scripts/get-impacted-tests.js '${{ steps.changed-files.outputs.all }}')"
+
+    - name: Run impacted tests
+      run: npm test -- ${{ steps.impacted-tests.outputs.tests }}
